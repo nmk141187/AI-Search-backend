@@ -1,0 +1,37 @@
+{
+    "name": "ai-search-prospect",
+    "version": "1.0.0",
+    "description": "AI Search Prospect is an API that enables searching across any type of data.",
+    "main": "dist/server.js",
+    "scripts": {
+        "dev": "ts-node src/server.ts",
+        "build": "tsc",
+        "start": "node dist/server.js",
+        "seed": "ts-node src/modules/company/company.seed.ts",
+        "test": "jest --runInBand --detectOpenHandles",
+        "test:watch": "jest --watch"
+    },
+    "dependencies": {
+        "cors": "^2.8.6",
+        "csv-stringify": "^6.5.2",
+        "dotenv": "^16.4.5",
+        "express": "^4.19.2",
+        "mongoose": "^8.6.1",
+        "zod": "^3.23.8"
+    },
+    "devDependencies": {
+        "@faker-js/faker": "^9.0.3",
+        "@types/cors": "^2.8.19",
+        "@types/express": "^5.0.0",
+        "@types/jest": "^29.5.12",
+        "@types/node": "^22.7.4",
+        "@types/supertest": "^6.0.2",
+        "jest": "^29.7.0",
+        "mongodb-memory-server": "^10.1.1",
+        "supertest": "^7.0.0",
+        "ts-jest": "^29.2.5",
+        "ts-node": "^10.9.2",
+        "ts-node-dev": "^2.0.0",
+        "typescript": "^5.6.2"
+    }
+}
