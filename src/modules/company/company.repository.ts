@@ -29,27 +29,43 @@ export class CompanyRepository {
         return query;
     }
 
-    async search(filters: CompanySearchFilters): Promise<CompanySearchResult<CompanyDcoument>> {
-        const { page, limit, ...restFilters } = filters;
-        const query = this.buildQuery(restFilters);
-        const skip = getSkip(page, limit);
+   async search(filters: CompanySearchFilters): Promise<CompanySearchResult<any>> {
+  const { page, limit, sector, subSector, location, tags } = filters;
 
-        const [data, total] = await Promise.all([
-            CompanyModel.find(query).sort({companyName: 1}).skip(skip).limit(limit).lean(),
-            CompanyModel.countDocuments(query).lean()
-        ]);
+  const query: any = {};
 
-        return {
-            filters: restFilters,
-            pagination: {
-                page,
-                limit,
-                total,
-                totalPages: getTotalPages(total, limit)
-            },
-            data: data as CompanyDcoument[]
-        };
-    }
+  if (sector) query.sector = sector;
+  if (subSector) query.subSector = subSector;
+  if (location) query.location = location;
+  if (tags?.length) query.tags = { $in: tags };
+
+  const skip = (page - 1) * limit;
+
+  const [data, total] = await Promise.all([
+    CompanyModel.find(query)
+      .sort({ companyName: 1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    CompanyModel.countDocuments(query),
+  ]);
+
+  return {
+    filters: {
+      sector,
+      subSector,
+      location,
+      tags,
+    },
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit) || 1,
+    },
+    data,
+  };
+}
 
     exportSearch(filters: CompanyExportFilters){
         const query = this.buildQuery(filters);

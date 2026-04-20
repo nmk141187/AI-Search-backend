@@ -12,38 +12,44 @@ export class CompanyController {
     constructor(
         private readonly companyService: CompanyService,
         private readonly aiParserService: AIParserService
-    ){}
+    ) { }
 
-    searchCompanies = async (req: Request, res: Response, next: NextFunction): Promise<void>  => {
-        try{
-            
-            const data = searchCompaniesQuerySchema.parse({...req.query,
-                tags: normalizeTags(req.query.tags as string | string[] | undefined)
+    searchCompanies = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+
+            const data = searchCompaniesQuerySchema.parse({
+                sector: req.query.sector,
+                subSector: req.query.subSector,
+                location: req.query.location,
+                tags: normalizeTags(req.query.tags as string | string[] | undefined),
+                page: req.query.page,
+                limit: req.query.limit,
             });
 
-           const filters = {
-            sector: data.sector,
-            subSector: data.subSector,
-            location: data.location,
-            tags: data.tags ? Array.isArray(data.tags) ? data.tags : [data.tags] : undefined,
-            page: data.page,
-            limit: data.limit
-           }
-           const results = await this.companyService.searchCompanies(filters);
+            const filters = {
+                sector: data.sector,
+                subSector: data.subSector,
+                location: data.location,
+                tags: data.tags ? (Array.isArray(data.tags) ? data.tags : [data.tags]) : undefined,
+                page: data.page,
+                limit: data.limit,
+            };
 
-           res.status(200).json({
-            success: true,
-            message:"Companies details fetched successfully",
-            ...results
-           });
+            const results = await this.companyService.searchCompanies(filters);
+
+            res.status(200).json({
+                success: true,
+                message: "Companies details fetched successfully",
+                ...results
+            });
 
         } catch (error) {
             next(error);
         }
     }
 
-    aiSearchCompanies = async (req: Request, res: Response, next: NextFunction): Promise<void>  => {
-        try{
+    aiSearchCompanies = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
             const { prompt } = aiPromptSchema.parse(req.body);
             const aiparsedFilters = await this.aiParserService.parsePrompt(prompt);
 
@@ -57,7 +63,7 @@ export class CompanyController {
 
             res.status(200).json({
                 success: true,
-                message:"Companies details fetched successfully",
+                message: "Companies details fetched successfully",
                 parsedFilters: aiparsedFilters,
                 ...results
             });
@@ -67,12 +73,12 @@ export class CompanyController {
         }
     }
 
-    exportCompanies = async (req: Request, res: Response, next: NextFunction): Promise<void>  => {
-        try{
+    exportCompanies = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
             const data = exportCompaniesQuerySchema.parse({
                 ...req.query,
                 tags: normalizeTags(req.query.tags as string | string[] | undefined)
-            });     
+            });
 
             const filters = {
                 sector: data.sector,
@@ -83,7 +89,7 @@ export class CompanyController {
 
             const cursor = await this.companyService.exportCompanies(filters);
             const csvStringifier = createCompanyCsvStringifier();
-            
+
             res.setHeader('Content-Type', 'text/csv');
             res.setHeader('Content-Disposition', 'attachment; filename=companies.csv');
 
@@ -103,29 +109,29 @@ export class CompanyController {
             }
             csvStringifier.end();
 
-        } catch (error) {   
+        } catch (error) {
             next(error);
-        }           
+        }
     };
-    
+
     health = async (req: Request, res: Response): Promise<void> => {
         res.status(200).json({
             message: "Company service is healthy"
         });
-    }   
+    }
 
-    aiSearchandExport = async (req: Request, res: Response, next: NextFunction): Promise<void>  => {
-        try{
+    aiSearchandExport = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
             const { prompt } = aiPromptSchema.parse(req.body);
             const aiparsedFilters = await this.aiParserService.parsePrompt(prompt);
             const cursor = await this.companyService.exportCompanies(aiparsedFilters);
             const csvStringifier = createCompanyCsvStringifier();
-            
+
             res.setHeader('Content-Type', 'text/csv');
             res.setHeader('Content-Disposition', 'attachment; filename=companies.csv');
 
             csvStringifier.pipe(res);
-            
+
             for await (const company of cursor) {
                 csvStringifier.write({
                     companyName: company.companyName,
@@ -140,15 +146,15 @@ export class CompanyController {
             }
             csvStringifier.end();
 
-        } catch (error) {   
+        } catch (error) {
             next(error);
-        }           
+        }
     };
-            
+
 }
 
 export function ensureCompanyController(controller: CompanyController | null): asserts controller is CompanyController {
     if (!controller) {
         throw new AppError('CompanyController instance is required', 500);
-    }           
+    }
 }
