@@ -50,15 +50,19 @@ export class CompanyController {
 
     aiSearchCompanies = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const { prompt } = aiPromptSchema.parse(req.body);
-            const aiparsedFilters = await this.aiParserService.parsePrompt(prompt);
+            const { prompt } = req.body;
+
+            const page = Number(req.body.page) || 1;
+            const limit = Number(req.body.limit) || 10;
+            const parsedPrompt  = aiPromptSchema.parse({ prompt });
+            const aiparsedFilters = await this.aiParserService.parsePrompt(parsedPrompt.prompt);
 
 
             const results = await this.companyService.searchCompanies({
                 ...aiparsedFilters,
                 tags: aiparsedFilters.tags ? Array.isArray(aiparsedFilters.tags) ? aiparsedFilters.tags : [aiparsedFilters.tags] : undefined,
-                page: 1,
-                limit: 10
+                page,
+                limit
             });
 
             res.status(200).json({
